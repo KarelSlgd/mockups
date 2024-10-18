@@ -1,24 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class Login extends StatefulWidget {
-  const Login({super.key});
+class CreateAccount extends StatefulWidget {
+  const CreateAccount({super.key});
 
   @override
-  State<Login> createState() => _LoginState();
+  State<CreateAccount> createState() => _CreateAccountState();
 }
 
-class _LoginState extends State<Login> {
+class _CreateAccountState extends State<CreateAccount> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isObscure = true;
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
+  bool _isPasswordObscure = true;
+  bool _isConfirmPasswordObscure = true;
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   String? _emailValidator(String? value) {
     if (value == null || value.isEmpty) {
       return 'Por favor, ingresa tu correo electrónico.';
     }
-    // Validación básica de correo electrónico
     if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
         .hasMatch(value)) {
       return 'Por favor, ingresa un correo electrónico válido.';
@@ -30,9 +34,18 @@ class _LoginState extends State<Login> {
     if (value == null || value.isEmpty) {
       return 'Por favor, ingresa tu contraseña.';
     }
-    // Validación de longitud mínima de 6 caracteres
     if (value.length < 6) {
       return 'La contraseña debe tener al menos 6 caracteres.';
+    }
+    return null;
+  }
+
+  String? _confirmPasswordValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Por favor, confirma tu contraseña.';
+    }
+    if (value != _passwordController.text) {
+      return 'Las contraseñas no coinciden.';
     }
     return null;
   }
@@ -40,14 +53,14 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        color: Colors.greenAccent[100],
-        child: Form(
-          key: _formKey,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      body: SingleChildScrollView(
+        child: Container(
+          width: double.infinity,
+          // Elimina la altura fija para evitar el desbordamiento
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          color: Colors.greenAccent[100],
+          child: Form(
+            key: _formKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -58,9 +71,9 @@ class _LoginState extends State<Login> {
                     height: 180,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
                 const Text(
-                  'ControlCash',
+                  'Crear Cuenta',
                   style: TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.bold,
@@ -68,7 +81,7 @@ class _LoginState extends State<Login> {
                   ),
                   textAlign: TextAlign.left,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 40),
                 TextFormField(
                   controller: _emailController,
                   validator: _emailValidator,
@@ -80,36 +93,61 @@ class _LoginState extends State<Login> {
                 TextFormField(
                   controller: _passwordController,
                   validator: _passwordValidator,
-                  obscureText: _isObscure,
+                  obscureText: _isPasswordObscure,
                   decoration: InputDecoration(
                     labelText: 'Contraseña',
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _isObscure ? Icons.visibility : Icons.visibility_off,
+                        _isPasswordObscure
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
-                          _isObscure = !_isObscure;
+                          _isPasswordObscure = !_isPasswordObscure;
                         });
                       },
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  validator: _confirmPasswordValidator,
+                  obscureText: _isConfirmPasswordObscure,
+                  decoration: InputDecoration(
+                    labelText: 'Confirmar Contraseña',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isConfirmPasswordObscure
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isConfirmPasswordObscure =
+                              !_isConfirmPasswordObscure;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
                       try {
                         final credential = await FirebaseAuth.instance
-                            .signInWithEmailAndPassword(
-                                email: _emailController.text,
-                                password: _passwordController.text);
+                            .createUserWithEmailAndPassword(
+                          email: _emailController.text,
+                          password: _passwordController.text,
+                        );
                         print(credential);
                       } on FirebaseAuthException catch (e) {
-                        if (e.code == 'user-not-found') {
-                          print('No user found for that email.');
-                        } else if (e.code == 'wrong-password') {
-                          print('Wrong password provided for that user.');
+                        if (e.code == 'email-already-in-use') {
+                          print('El correo ya está en uso.');
+                        } else if (e.code == 'weak-password') {
+                          print('La contraseña es muy débil.');
                         }
                       }
                     }
@@ -125,7 +163,7 @@ class _LoginState extends State<Login> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Iniciar Sesión',
+                        'Crear Cuenta',
                         style: TextStyle(
                           fontSize: 18,
                           color: Colors.white,
@@ -135,20 +173,20 @@ class _LoginState extends State<Login> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 30),
-                Center(
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/create-account');
-                    },
-                    child: const Text(
-                      'Registrate',
-                      style: TextStyle(
-                        color: Colors.black,
-                      ),
+                const SizedBox(height: 20),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                  },
+                  child: const Text(
+                    'Ya tengo cuenta',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),

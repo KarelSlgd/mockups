@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "527439404993",
+    "project_id": "controlcash-bbb1f",
+    "storage_bucket": "controlcash-bbb1f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:527439404993:android:08bc973dc146c026591940",
+        "android_client_info": {
+          "package_name": "com.example.mockups"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDr4V46Z70HaK-Ofx0kuLHY4JsoJEgexh0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
